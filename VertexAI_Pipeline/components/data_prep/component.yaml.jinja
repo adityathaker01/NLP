@@ -1,0 +1,23 @@
+name: Data Prep
+inputs:
+- {name: sample_size, type: Integer}
+- {name: lemmatize_flag, type: String}
+- {name: job_id, type: String}
+- {name: dim_reduction_algo, type: String}
+
+outputs:
+- {name: data_path, type: Artifact}
+
+implementation:
+  container:
+    image: us-central1-docker.pkg.dev/arboreal-path-365814/vertexai-training/data-prep-mlops:latest
+    command: [python, /pipeline/src/data_prep.py]
+    args: [
+      --executor_input, {executorInput: null},
+      --function_to_execute, data_prep,
+      --sample_size, {inputValue: sample_size},
+      --lemmatize_flag, {inputValue: lemmatize_flag},
+      --job_id, {inputValue: job_id},
+      --dim_reduction_algo, {inputValue: dim_reduction_algo},
+      --data_path, {outputPath: data_path}
+          ]
