@@ -1,0 +1,17 @@
+name: Training
+inputs:
+- {name: job_id, type: String}
+
+outputs:
+- {name: topic_info_path, type: Artifact}
+
+implementation:
+  container:
+    image: us-central1-docker.pkg.dev/arboreal-path-365814/vertexai-training/model-training-mlops:latest
+    command: [python, /pipeline/src/model_training.py]
+    args: [
+      --executor_input, {executorInput: null},
+      --function_to_execute, model_training_runner,
+      --job_id, {inputValue: job_id},
+      --topic_info_path, {outputPath: topic_info_path}
+          ]
