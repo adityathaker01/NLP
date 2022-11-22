@@ -1,0 +1,108 @@
+{
+  "pipelineSpec": {
+    "components": {
+      "comp-data-prep": {
+        "executorLabel": "exec-data-prep",
+        "inputDefinitions": {
+          "parameters": {
+            "job_id": {
+              "type": "STRING"
+            },
+            "lemmatize_flag": {
+              "type": "STRING"
+            },
+            "sample_size": {
+              "type": "INT"
+            }
+          }
+        },
+        "outputDefinitions": {
+          "artifacts": {
+            "data_path": {
+              "artifactType": {
+                "schemaTitle": "system.Artifact",
+                "schemaVersion": "0.0.1"
+              }
+            }
+          }
+        }
+      }
+    },
+    "deploymentSpec": {
+      "executors": {
+        "exec-data-prep": {
+          "container": {
+            "args": [
+              "--executor_input",
+              "{{$}}",
+              "--function_to_execute",
+              "data_prep",
+              "--sample_size",
+              "{{$.inputs.parameters['sample_size']}}",
+              "--lemmatize_flag",
+              "{{$.inputs.parameters['lemmatize_flag']}}",
+              "--job_id",
+              "{{$.inputs.parameters['job_id']}}",
+              "--data_path",
+              "{{$.outputs.artifacts['data_path'].path}}"
+            ],
+            "command": [
+              "python",
+              "/pipeline/src/data_prep.py"
+            ],
+            "image": "us-central1-docker.pkg.dev/arboreal-path-365814/vertexai-training/data-prep-mlops:latest"
+          }
+        }
+      }
+    },
+    "pipelineInfo": {
+      "name": "data-prep-pipeline"
+    },
+    "root": {
+      "dag": {
+        "tasks": {
+          "data-prep": {
+            "cachingOptions": {
+              "enableCache": true
+            },
+            "componentRef": {
+              "name": "comp-data-prep"
+            },
+            "inputs": {
+              "parameters": {
+                "job_id": {
+                  "componentInputParameter": "job_id"
+                },
+                "lemmatize_flag": {
+                  "componentInputParameter": "lemmatize_flag"
+                },
+                "sample_size": {
+                  "componentInputParameter": "sample_size"
+                }
+              }
+            },
+            "taskInfo": {
+              "name": "data-prep"
+            }
+          }
+        }
+      },
+      "inputDefinitions": {
+        "parameters": {
+          "job_id": {
+            "type": "STRING"
+          },
+          "lemmatize_flag": {
+            "type": "STRING"
+          },
+          "sample_size": {
+            "type": "INT"
+          }
+        }
+      }
+    },
+    "schemaVersion": "2.0.0",
+    "sdkVersion": "kfp-1.8.13"
+  },
+  "runtimeConfig": {}
+}

@@ -1,0 +1,179 @@
+{
+  "pipelineSpec": {
+    "components": {
+      "comp-data-prep": {
+        "executorLabel": "exec-data-prep",
+        "inputDefinitions": {
+          "parameters": {
+            "dim_reduction_algo": {
+              "type": "STRING"
+            },
+            "job_id": {
+              "type": "STRING"
+            },
+            "lemmatize_flag": {
+              "type": "STRING"
+            },
+            "sample_size": {
+              "type": "INT"
+            }
+          }
+        },
+        "outputDefinitions": {
+          "artifacts": {
+            "data_path": {
+              "artifactType": {
+                "schemaTitle": "system.Artifact",
+                "schemaVersion": "0.0.1"
+              }
+            }
+          }
+        }
+      },
+      "comp-training": {
+        "executorLabel": "exec-training",
+        "inputDefinitions": {
+          "parameters": {
+            "job_id": {
+              "type": "STRING"
+            }
+          }
+        },
+        "outputDefinitions": {
+          "artifacts": {
+            "topic_info_path": {
+              "artifactType": {
+                "schemaTitle": "system.Artifact",
+                "schemaVersion": "0.0.1"
+              }
+            }
+          }
+        }
+      }
+    },
+    "deploymentSpec": {
+      "executors": {
+        "exec-data-prep": {
+          "container": {
+            "args": [
+              "--executor_input",
+              "{{$}}",
+              "--function_to_execute",
+              "data_prep",
+              "--sample_size",
+              "{{$.inputs.parameters['sample_size']}}",
+              "--lemmatize_flag",
+              "{{$.inputs.parameters['lemmatize_flag']}}",
+              "--job_id",
+              "{{$.inputs.parameters['job_id']}}",
+              "--dim_reduction_algo",
+              "{{$.inputs.parameters['dim_reduction_algo']}}",
+              "--data_path",
+              "{{$.outputs.artifacts['data_path'].path}}"
+            ],
+            "command": [
+              "python",
+              "/pipeline/src/data_prep.py"
+            ],
+            "image": "us-central1-docker.pkg.dev/arboreal-path-365814/vertexai-training/data-prep-mlops:latest"
+          }
+        },
+        "exec-training": {
+          "container": {
+            "args": [
+              "--executor_input",
+              "{{$}}",
+              "--function_to_execute",
+              "model_training_runner",
+              "--job_id",
+              "{{$.inputs.parameters['job_id']}}",
+              "--topic_info_path",
+              "{{$.outputs.artifacts['topic_info_path'].path}}"
+            ],
+            "command": [
+              "python",
+              "/pipeline/src/model_training.py"
+            ],
+            "image": "us-central1-docker.pkg.dev/arboreal-path-365814/vertexai-training/model-training-mlops:latest"
+          }
+        }
+      }
+    },
+    "pipelineInfo": {
+      "name": "e2e-training-pipeline"
+    },
+    "root": {
+      "dag": {
+        "tasks": {
+          "data-prep": {
+            "cachingOptions": {
+              "enableCache": true
+            },
+            "componentRef": {
+              "name": "comp-data-prep"
+            },
+            "inputs": {
+              "parameters": {
+                "dim_reduction_algo": {
+                  "componentInputParameter": "dim_reduction_algo"
+                },
+                "job_id": {
+                  "componentInputParameter": "job_id"
+                },
+                "lemmatize_flag": {
+                  "componentInputParameter": "lemmatize_flag"
+                },
+                "sample_size": {
+                  "componentInputParameter": "sample_size"
+                }
+              }
+            },
+            "taskInfo": {
+              "name": "data-prep"
+            }
+          },
+          "training": {
+            "cachingOptions": {
+              "enableCache": true
+            },
+            "componentRef": {
+              "name": "comp-training"
+            },
+            "dependentTasks": [
+              "data-prep"
+            ],
+            "inputs": {
+              "parameters": {
+                "job_id": {
+                  "componentInputParameter": "job_id"
+                }
+              }
+            },
+            "taskInfo": {
+              "name": "training"
+            }
+          }
+        }
+      },
+      "inputDefinitions": {
+        "parameters": {
+          "dim_reduction_algo": {
+            "type": "STRING"
+          },
+          "job_id": {
+            "type": "STRING"
+          },
+          "lemmatize_flag": {
+            "type": "STRING"
+          },
+          "sample_size": {
+            "type": "INT"
+          }
+        }
+      }
+    },
+    "schemaVersion": "2.0.0",
+    "sdkVersion": "kfp-1.8.13"
+  },
+  "runtimeConfig": {}
+}
