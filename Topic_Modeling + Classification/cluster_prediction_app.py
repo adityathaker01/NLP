@@ -1,5 +1,4 @@
 from flask import Flask, jsonify, request
-#from sentence_transformers import SentenceTransformer
 import pickle
 import pandas as pd
 import hdbscan
@@ -48,7 +47,7 @@ def cluster_prediction(text):
 def predict():
     """Function is used for prediction"""
     # get data 
-    data = request.get_json()['text'] #request.list(force=True)  # get_json(force=True) #request.get_json()['text'] # pylint: disable=line-too-long
+    data = request.get_json()['text'] 
 
     # predictions
     result = cluster_prediction(data)
@@ -63,5 +62,5 @@ if __name__ == '__main__':
     app.run(port=5000, debug=True)
 
 
-# !python app.py
+# !python3 cluster_prediction_app.py
 # !curl http://127.0.0.1:5000/ -d "{\"text\": \" i have not go fjisd dhsl \"} " -H 'Content-Type: application/json'
